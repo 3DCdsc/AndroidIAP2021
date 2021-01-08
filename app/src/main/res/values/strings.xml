@@ -1,0 +1,4 @@
+<resources>
+    <string name="app_name">VirtualPets</string>
+    <string name="preference_file_key">VirtualPetsPreferenceKey</string>
+</resources>

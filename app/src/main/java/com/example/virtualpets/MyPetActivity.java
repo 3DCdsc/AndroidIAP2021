@@ -36,7 +36,7 @@ public class MyPetActivity extends AppCompatActivity {
 
         initialiseWidgetsForPet(pet1Image, pet1HungerText, pet1Button, pet1);
         initialiseWidgetsForPet(pet2Image, pet2HungerText, pet2Button, pet2);
-    }:q
+    }
 
     private void initialiseWidgetsForPet(ImageView petImage, TextView hungerText,
                                          Button petButton, String pet) {

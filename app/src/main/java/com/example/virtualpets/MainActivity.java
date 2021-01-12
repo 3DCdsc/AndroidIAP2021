@@ -72,11 +72,11 @@ public class MainActivity extends AppCompatActivity {
                 Toast.makeText(this, "Welcome " + userName, Toast.LENGTH_SHORT).show();
 
                 // Get Signed-in user's id
-                String userId = user.getUid();
+                String userEmail = user.getEmail().replace(".", ",");
                 // Get Reference to database
                 DatabaseReference mDatabase = FirebaseDatabase.getInstance().getReference();
                 // Get Reference to where we expect user's data to be
-                DatabaseReference mUser = mDatabase.child("pets_database").child(userId);
+                DatabaseReference mUser = mDatabase.child("pets_database").child(userEmail);
                 // Use this function to attempt to read data from our reference
                 mUser.addListenerForSingleValueEvent(new ValueEventListener() {
                     @Override
@@ -92,12 +92,18 @@ public class MainActivity extends AppCompatActivity {
                                     .putInt("pet1hunger", snapshot.child("pet1").child("hunger").getValue(int.class))
                                     .putString("pet2", snapshot.child("pet2").child("type").getValue(String.class))
                                     .putInt("pet2hunger", snapshot.child("pet2").child("hunger").getValue(int.class))
+                                    .putString("email", userEmail)
                                     .apply();
 
                             // Go to MyPetActivity
                             Intent intent = new Intent(MainActivity.this, MyPetActivity.class);
                             startActivity(intent);
                         } else {
+                            SharedPreferences sharedPref = getSharedPreferences(getString(R.string.preference_file_key), Context.MODE_PRIVATE);
+                            sharedPref.edit()
+                                    .putString("email", userEmail)
+                                    .apply();
+
                             // Go to ChoosePetActivity
                             Intent intent = new Intent(MainActivity.this, ChoosePetActivity1.class);
                             startActivity(intent);

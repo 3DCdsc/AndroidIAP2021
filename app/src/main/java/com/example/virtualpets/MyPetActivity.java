@@ -13,9 +13,12 @@ import android.net.Uri;
 import android.os.Bundle;
 import android.util.Log;
 import android.widget.Button;
+import android.widget.EditText;
 import android.widget.ImageView;
 import android.widget.TextView;
 
+import com.firebase.ui.auth.AuthUI;
+import com.google.android.gms.tasks.OnCompleteListener;
 import com.google.android.gms.tasks.Task;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
@@ -37,6 +40,7 @@ public class MyPetActivity extends AppCompatActivity {
     DatabaseReference mUserRef;
     private final static int RC_PICK_IMAGE_1 = 1;
     private final static int RC_PICK_IMAGE_2 = 2;
+    String userEmail;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -51,6 +55,11 @@ public class MyPetActivity extends AppCompatActivity {
         ImageView pet2Image = findViewById(R.id.pet2Image);
         TextView pet2HungerText = findViewById(R.id.pet2HungerText);
         Button pet2Button = findViewById(R.id.pet2Button);
+
+        EditText emailText = findViewById(R.id.emailText);
+        Button visitButton = findViewById(R.id.visitButton);
+        Button signOutButton = findViewById(R.id.signOutButton);
+
 
         // Get copy of sharedpreferences
         SharedPreferences sharedPref = getSharedPreferences(getString(R.string.preference_file_key), Context.MODE_PRIVATE);
@@ -67,10 +76,10 @@ public class MyPetActivity extends AppCompatActivity {
         mDatabase = FirebaseDatabase.getInstance().getReference();
 
         // Get our user's email
-        String userId = FirebaseAuth.getInstance().getCurrentUser().getUid();
+        String userEmail = sharedPref.getString("email", ".").replace(".", ",");
 
         // Get reference to our user's pet data
-        mUserRef = mDatabase.child("pets_database").child(userId);
+        mUserRef = mDatabase.child("pets_database").child(userEmail);
 
         mUserRef.child("pet1").child("type").setValue(pet1);
         mUserRef.child("pet1").child("hunger").setValue(pet1HungerValue);
@@ -79,6 +88,26 @@ public class MyPetActivity extends AppCompatActivity {
 
         initialiseWidgetsForPet("pet1", pet1Image, RC_PICK_IMAGE_1, pet1HungerText, pet1Button, pet1, pet1HungerValue);
         initialiseWidgetsForPet("pet2", pet2Image, RC_PICK_IMAGE_2, pet2HungerText, pet2Button, pet2, pet2HungerValue);
+
+
+        visitButton.setOnClickListener(view -> {
+            sharedPref.edit().putString("email", emailText.getText().toString()).apply();
+            Intent intent = new Intent(MyPetActivity.this, MyPetActivity.class);
+            startActivity(intent);
+            finish();
+        });
+
+        signOutButton.setOnClickListener(view -> {
+            AuthUI.getInstance()
+                    .signOut(this)
+                    .addOnCompleteListener(new OnCompleteListener<Void>() {
+                        public void onComplete(@NonNull Task<Void> task) {
+                            Intent intent = new Intent(MyPetActivity.this, MainActivity.class);
+                            startActivity(intent);
+                            finish();
+                        }
+                    });
+        });
     }
 
     private void initialiseWidgetsForPet(String petId, ImageView petImage,
@@ -147,8 +176,8 @@ public class MyPetActivity extends AppCompatActivity {
             try {
                 InputStream inputStream = getContentResolver().openInputStream(data.getData());
                 StorageReference storageRef = FirebaseStorage.getInstance().getReference();
-                String userId = FirebaseAuth.getInstance().getCurrentUser().getUid();
-                StorageReference userStorageRef = storageRef.child(userId).child(Integer.toString(requestCode));
+                String userEmail = FirebaseAuth.getInstance().getCurrentUser().getEmail().replace(".", ",");
+                StorageReference userStorageRef = storageRef.child(userEmail).child(Integer.toString(requestCode));
                 userStorageRef.putStream(inputStream)
                     .continueWithTask(taskSnapshot -> {
                         return userStorageRef.getDownloadUrl();
